@@ -12,11 +12,25 @@ namespace MagicVilla_KennyAPI.Controllers
     [ApiController]
     public class VillaAPIController : ControllerBase
     {
+        //Implementing logger through dependancy injection.
+
+        private readonly ILogger<VillaAPIController> _logger;
+
+        public VillaAPIController(ILogger<VillaAPIController>logger)
+        {
+            _logger = logger;
+            
+        }
+
+
+
         //Creating an endpoint
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public ActionResult<IEnumerable<VillaDTO>> GetVillas()  //introducing ActionResult to define the statuscodes
         {
+            _logger.LogInformation("Get all the villas");
+
             return Ok(DataStore.VillaList);
 
         }
@@ -30,9 +44,11 @@ namespace MagicVilla_KennyAPI.Controllers
         //[ProducesResponseType(200, type = typeof(VillaDTO))]    //For documentation
         public ActionResult<VillaDTO> GetVilla(int id)
         {
-            //Adding multiple status code and validation
+            //Adding multiple statuscode and validation
             if (id == 0)
             {
+                _logger.LogError("Get villa error with ID" + id);
+
                 return BadRequest();
             }
             var villa = DataStore.VillaList.FirstOrDefault(u => u.Id == id);
@@ -75,11 +91,11 @@ namespace MagicVilla_KennyAPI.Controllers
             {
                 return StatusCode(StatusCodes.Status500InternalServerError);
             }
-            villaDto.Id = DataStore.VillaList.OrderByDescending(u => u.Id).FirstOrDefault().Id + 1;   //Increasing the id in ascending order.
+            villaDto.Id = DataStore.VillaList.OrderByDescending(u => u.Id).FirstOrDefault().Id + 1;   //Increasing the id in descending order.
             DataStore.VillaList.Add(villaDto);
 
             //return Ok(villaDto);
-            return CreatedAtRoute("GetVilla", new { id = villaDto.Id }, villaDto);
+            return CreatedAtRoute("GetVilla", new { id = villaDto.Id }, villaDto);   //Use CreatedAtRoute to get the HttpPost URL.
 
         }
 
@@ -88,7 +104,7 @@ namespace MagicVilla_KennyAPI.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
 
-        public IActionResult DeleteVilla(int id)    //Note I am using IActionResult because I am not defining the return type.
+        public IActionResult DeleteVilla(int id)    //Note we are using IActionResult because we are not defining the return type.
         {
             if (id == 0)
             {
