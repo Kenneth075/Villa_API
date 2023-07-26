@@ -22,6 +22,13 @@ namespace MagicVilla_KennyAPI.Controllers
             
         }
 
+        private readonly ApplicationDbContext _db; 
+        public VillaAPIController(ApplicationDbContext db)
+        {
+            _db = db;
+            
+        }
+
 
 
         //Creating an endpoint

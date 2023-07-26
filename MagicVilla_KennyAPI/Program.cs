@@ -1,5 +1,8 @@
 //using Serilog;
 
+using MagicVilla_KennyAPI.Data;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -10,6 +13,11 @@ var builder = WebApplication.CreateBuilder(args);
 
 //builder.Host.UseSerilog();  //This command tells the computer to use Serilog Logger instead of the build-in console log.
 
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+{
+    options.UseSqlServer(builder.Configuration.GetConnectionString("Defualt"));
+
+});
 
 builder.Services.AddControllers(option => { 
     //option.ReturnHttpNotAcceptable = true; 
