@@ -4,6 +4,7 @@ using MagicVilla_KennyAPI.Model.DTO;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace MagicVilla_KennyAPI.Controllers
 {
@@ -14,13 +15,13 @@ namespace MagicVilla_KennyAPI.Controllers
     {
         //Implementing logger through dependancy injection.
 
-        private readonly ILogger<VillaAPIController> _logger;
+        //private readonly ILogger<VillaAPIController> _logger;
 
-        public VillaAPIController(ILogger<VillaAPIController>logger)
-        {
-            _logger = logger;
+        //public VillaAPIController(ILogger<VillaAPIController>logger)
+        //{
+        //    _logger = logger;
             
-        }
+        //}
 
         private readonly ApplicationDbContext _db; 
         public VillaAPIController(ApplicationDbContext db)
@@ -36,9 +37,10 @@ namespace MagicVilla_KennyAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         public ActionResult<IEnumerable<VillaDTO>> GetVillas()  //introducing ActionResult to define the statuscodes
         {
-            _logger.LogInformation("Get all the villas");
+            //_logger.LogInformation("Get all the villas");
 
-            return Ok(DataStore.VillaList);
+            //return Ok(DataStore.VillaList);
+            return Ok(_db.Villas);
 
         }
 
@@ -54,11 +56,12 @@ namespace MagicVilla_KennyAPI.Controllers
             //Adding multiple statuscode and validation
             if (id == 0)
             {
-                _logger.LogError("Get villa error with ID" + id);
+                //_logger.LogError("Get villa error with ID" + id);
 
                 return BadRequest();
             }
-            var villa = DataStore.VillaList.FirstOrDefault(u => u.Id == id);
+            //var villa = DataStore.VillaList.FirstOrDefault(u => u.Id == id);
+            var villa = _db.Villas.FirstOrDefault(u => u.Id == id);
             if (villa == null)
             {
                 return NotFound();
@@ -83,7 +86,7 @@ namespace MagicVilla_KennyAPI.Controllers
             //}
 
             //Validation to check if villa is unique, i.e does not repeat same name.
-            if (DataStore.VillaList.FirstOrDefault(u => u.Name.ToLower() == villaDto.Name.ToLower()) != null)
+            if (_db.Villas.FirstOrDefault(u => u.Name.ToLower() == villaDto.Name.ToLower()) != null)
             {
                 ModelState.AddModelError("CustomError", "Villa already exists!");
                 return BadRequest(ModelState);
@@ -98,8 +101,22 @@ namespace MagicVilla_KennyAPI.Controllers
             {
                 return StatusCode(StatusCodes.Status500InternalServerError);
             }
-            villaDto.Id = DataStore.VillaList.OrderByDescending(u => u.Id).FirstOrDefault().Id + 1;   //Increasing the id in descending order.
-            DataStore.VillaList.Add(villaDto);
+            Villa model = new Villa()
+            {
+                Id = villaDto.Id,
+                Name = villaDto.Name,
+                Details = villaDto.Details,
+                Sqft = villaDto.Sqft,
+                Occupancy = villaDto.Occupancy,
+                Amenity = villaDto.Amenity,
+                imageUrl = villaDto.imageUrl
+            };
+            _db.Villas.Add(model);
+            _db.SaveChanges();
+
+
+            
+            
 
             //return Ok(villaDto);
             return CreatedAtRoute("GetVilla", new { id = villaDto.Id }, villaDto);   //Use CreatedAtRoute to get the HttpPost URL.
@@ -117,14 +134,17 @@ namespace MagicVilla_KennyAPI.Controllers
             {
                 return BadRequest();
             }
-            var villa = DataStore.VillaList.FirstOrDefault(u => u.Id == id);
+            var villa = _db.Villas.FirstOrDefault(u => u.Id == id);
             if (villa == null)
             {
                 return NotFound();
             }
-            DataStore.VillaList.Remove(villa);
+            _db.Villas.Remove(villa);
+            _db.SaveChanges();
             return NoContent();
         }
+
+
         [HttpPut("{id:int}", Name = "UpdateVilla")]
         [ProducesResponseType(statusCode: StatusCodes.Status204NoContent)]
         [ProducesResponseType(statusCode: StatusCodes.Status400BadRequest)]
@@ -134,10 +154,25 @@ namespace MagicVilla_KennyAPI.Controllers
             {
                 return BadRequest();
             }
-            var villa = DataStore.VillaList.FirstOrDefault(u => u.Id == id);
-            villa.Name = villaDTO.Name;
-            villa.Sqft = villaDTO.Sqft;
-            villa.Occupancy = villaDTO.Occupancy;
+            //var villa = DataStore.VillaList.FirstOrDefault(u => u.Id == id);
+            //villa.Name = villaDTO.Name;
+            //villa.Sqft = villaDTO.Sqft;
+            //villa.Occupancy = villaDTO.Occupancy;
+
+            Villa model = new Villa()
+            {
+                Id = villaDTO.Id,
+                Name = villaDTO.Name,
+                Details = villaDTO.Details,
+                Sqft = villaDTO.Sqft,
+                Occupancy = villaDTO.Occupancy,
+                Amenity = villaDTO.Amenity,
+                imageUrl = villaDTO.imageUrl
+            };
+            _db.Villas.Update(model);
+            _db.SaveChanges();
+
+
 
             return NoContent();
 
@@ -151,12 +186,41 @@ namespace MagicVilla_KennyAPI.Controllers
             {
                 return BadRequest();
             }
-            var villa = DataStore.VillaList.FirstOrDefault(u=>u.Id == id);
+            var villa = _db.Villas.AsNoTracking().FirstOrDefault(u=>u.Id == id);
+
+            VillaDTO villaDTO = new VillaDTO()
+            {
+                Id = villa.Id,
+                Name = villa.Name,
+                Details = villa.Details,
+                Sqft = villa.Sqft,
+                Amenity = villa.Amenity,
+                imageUrl = villa.imageUrl,
+                Occupancy = villa.Occupancy,
+            };
+
+
             if(villa == null)
             {
                 return BadRequest();
             }
-            patchDTO.ApplyTo(villa, ModelState);
+
+            patchDTO.ApplyTo(villaDTO, ModelState);
+
+            Villa model = new Villa()
+            {
+                imageUrl = villa.imageUrl,
+                Id = villa.Id,
+                Sqft = villa.Sqft,
+                Occupancy = villa.Occupancy,
+                Name = villa.Name,
+                Amenity = villa.Amenity,
+                Details = villa.Details,
+
+            };
+            _db.Villas.Update(model);
+            _db.SaveChanges();
+
             if(!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
