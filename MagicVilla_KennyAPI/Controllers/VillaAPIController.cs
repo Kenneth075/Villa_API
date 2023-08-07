@@ -76,7 +76,7 @@ namespace MagicVilla_KennyAPI.Controllers
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public ActionResult<VillaDTO> CreateVilla([FromBody] VillaDTO villaDto)
         {
             //if (!ModelState.IsValid)
@@ -101,6 +101,8 @@ namespace MagicVilla_KennyAPI.Controllers
             {
                 return StatusCode(StatusCodes.Status500InternalServerError);
             }
+
+            //Automapper
             Villa model = new Villa()
             {
                 Id = villaDto.Id,

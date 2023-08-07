@@ -12,7 +12,7 @@ namespace MagicVilla_KennyAPI.Data
         public DbSet<Villa> Villas { get; set; }
 
 
-        //Seeding our database with data.
+        //Seeding the database with data.
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Villa>().HasData(
